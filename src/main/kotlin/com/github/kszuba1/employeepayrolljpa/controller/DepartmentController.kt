@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RestController
 class DepartmentController(private val departmentService: DepartmentService) {
 
     @GetMapping
-    fun list(): List<DepartmentDto> = departmentService.findAll()
+    fun findAll(): List<DepartmentDto> = departmentService.findAll()
 
     @GetMapping("/annual-total")
     fun annualTotal(

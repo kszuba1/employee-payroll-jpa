@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RestController
 class UserController(private val userService: UserService) {
 
     @GetMapping
-    fun list(): List<UserDto> = userService.findAll()
+    fun findAll(): List<UserDto> = userService.findAll()
 
     @GetMapping("/{id}")
     fun findById(@PathVariable id: Long): ResponseEntity<UserDto> =

@@ -14,7 +14,7 @@ import java.math.BigDecimal
 class SalaryController(private val salaryService: SalaryService) {
 
     @GetMapping
-    fun list(): List<SalaryDto> = salaryService.findAll()
+    fun findAll(): List<SalaryDto> = salaryService.findAll()
 
     @GetMapping("/monthly-tax")
     fun monthlyTax(
