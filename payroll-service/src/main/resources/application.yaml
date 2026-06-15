@@ -1,0 +1,29 @@
+spring:
+  application:
+    name: employee-payroll-jpa
+
+  activemq:
+    broker-url: "failover:(tcp://localhost:61616)?startupMaxReconnectAttempts=10&initialReconnectDelay=200"
+
+  datasource:
+    url: jdbc:h2:mem:payroll;DB_CLOSE_DELAY=-1
+    username: sa
+    password: ""
+
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    defer-datasource-initialization: true
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+
+app:
+  broker:
+    bind-url: "tcp://localhost:61616"

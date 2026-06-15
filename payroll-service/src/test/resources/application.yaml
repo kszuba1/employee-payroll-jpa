@@ -1,0 +1,10 @@
+spring:
+  # The `test` profile disables the embedded TCP broker (BrokerConfig); tests use a lightweight
+  # in-VM broker instead of binding a real port.
+  profiles:
+    active: test
+  sql:
+    init:
+      mode: never
+  activemq:
+    broker-url: "vm://localhost?broker.persistent=false&broker.useJmx=false"
