@@ -1,0 +1,22 @@
+spring:
+  application:
+    name: salary-generator
+  main:
+    web-application-type: none
+    banner-mode: "off"
+  activemq:
+    broker-url: "failover:(tcp://localhost:61616)?startupMaxReconnectAttempts=10&initialReconnectDelay=200"
+
+app:
+  rest:
+    base-url: "http://localhost:8080"
+  generation:
+    months-per-user: 3
+    min-salary: 3000.00
+    max-salary: 9000.00
+    max-bonus: 1500.00
+
+logging:
+  level:
+    root: WARN
+    com.github.kszuba1: INFO
