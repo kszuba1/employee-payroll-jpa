@@ -18,7 +18,7 @@ class OpenApiConfig {
                         "departments (with column sorting), manage department membership, and run " +
                         "accounting queries (annual department/person totals, monthly company tax). " +
                         "Also hosts the salary.queue and consumes salaries published to it by the " +
-                        "standalone SalaryGenerator app (Lab VII-VIII).",
+                        "standalone SalaryGenerator app.",
                 )
                 .version("v1"),
         )

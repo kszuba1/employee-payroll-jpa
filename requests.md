@@ -1,7 +1,7 @@
 # Employee Payroll — Example Requests
 
 Ready-to-run examples for every REST endpoint, with bodies and expected results based on
-the seed data in [`src/main/resources/data.sql`](src/main/resources/data.sql).
+the seed data in [`payroll-service/src/main/resources/data.sql`](payroll-service/src/main/resources/data.sql).
 
 Base URL: **`http://localhost:8080`**
 
@@ -25,19 +25,23 @@ Base URL: **`http://localhost:8080`**
 - [Salaries](#salaries)
   - [List salaries](#list-salaries)
   - [Monthly company tax](#monthly-company-tax)
+- [Salary generation (JMS queue)](#salary-generation-jms-queue)
+  - [Generate salaries](#generate-salaries)
 - [Seed data reference](#seed-data-reference)
 
 ---
 
 ## Getting started
 
-Run the app:
+This is a multi-module build. Run the **payroll service** (REST API + database + queue server):
 
 ```bash
-./gradlew bootRun
+./gradlew :payroll-service:bootRun
 ```
 
-It starts on `http://localhost:8080` and loads the seed data automatically.
+It starts on `http://localhost:8080`, loads the seed data automatically, and hosts the message
+broker on `tcp://localhost:61616`. To generate salaries, run the separate generator app — see
+[Salary generation](#salary-generation-jms-queue).
 
 - Responses are JSON.
 - List endpoints (`/api/users`, `/api/departments`) accept optional `sortBy` and `direction` query params.
@@ -274,6 +278,62 @@ curl -s "http://localhost:8080/api/salaries/monthly-tax?year=2025&month=1&taxPer
 ```
 
 (January 2025 salaries: 5500 + 4800 + 4000 + 3500 = 17800; × 19% = 3382.00)
+
+---
+
+## Salary generation (JMS queue)
+
+Lab VII–VIII: integration through a message queue (Message Oriented Middleware), implemented as
+**three separate components** (a multi-module Gradle build):
+
+| Component | Module | Role |
+| --- | --- | --- |
+| RestAPI + DataStore + **Queue Server** | `:payroll-service` | Serves `/api/*`, hosts the ActiveMQ broker on `tcp://localhost:61616`, and runs `SalaryConsumerService` |
+| `SalaryGenerator` | `:salary-generator` | Standalone app: downloads users over REST, publishes salaries to the queue |
+| `SalaryMessage` contract | `:contract` | Shared message type used by both sides |
+
+The flow:
+
+1. `SalaryGenerator` downloads the employee list over **REST** (`GET /api/users`),
+2. pseudo-randomly generates `monthsPerUser` monthly salaries per user and publishes each one to
+   the `salary.queue` over **TCP**,
+3. `SalaryConsumerService` (a `@JmsListener` in the payroll service) consumes the queue
+   **asynchronously** and saves each salary — they then show up under [`GET /api/salaries`](#list-salaries).
+
+Salary **dates walk backwards in time**: the first user's first paycheck is dated today and every
+subsequent paycheck is one month older, so successive users get progressively older dates.
+
+### Generate salaries
+
+The generator is a **separate process**. With `:payroll-service` already running, in another
+terminal run:
+
+```bash
+# generate with defaults (monthsPerUser=3, minSalary=3000, maxSalary=9000, maxBonus=1500)
+./gradlew :salary-generator:bootRun
+
+# override any parameter on the command line, e.g. 2 months per user in a tighter band, no bonuses
+./gradlew :salary-generator:bootRun \
+  --args='--app.generation.months-per-user=2 --app.generation.min-salary=4000 --app.generation.max-salary=6000 --app.generation.max-bonus=0'
+```
+
+The generator logs a summary and exits, e.g.:
+
+```
+Done — published 8 salary message(s) for 4 user(s) to 'salary.queue'.
+```
+
+Then re-fetch the salaries from the payroll service to see the consumed rows:
+
+```bash
+curl -s "http://localhost:8080/api/salaries" | python3 -c "import sys,json; print(len(json.load(sys.stdin)))"
+# 16 seeded + 8 generated = 24
+```
+
+> If the generator points at a payroll service on another host, set `--app.rest.base-url=http://host:8080`
+> and `--spring.activemq.broker-url='failover:(tcp://host:61616)'`.
+
+Validation (`400`): `monthsPerUser < 1`, `minSalary < 0`, `minSalary > maxSalary`, or `maxBonus < 0`.
 
 ---
 
