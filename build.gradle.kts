@@ -1,49 +1,21 @@
+// Root build for the multi-module Lab VII-VIII project. Plugins are declared here (versions in
+// one place) but applied in the subprojects that need them. See:
+//   :contract          — shared JMS message contract (plain Kotlin library)
+//   :payroll-service   — RestAPI + JPA DataStore + SalaryConsumerService + embedded queue broker
+//   :salary-generator  — standalone app: fetches users over REST and publishes salaries to the queue
 plugins {
-	kotlin("jvm") version "2.2.21"
-	kotlin("plugin.spring") version "2.2.21"
-	id("org.springframework.boot") version "4.0.6"
-	id("io.spring.dependency-management") version "1.1.7"
-	kotlin("plugin.jpa") version "2.2.21"
+	kotlin("jvm") version "2.2.21" apply false
+	kotlin("plugin.spring") version "2.2.21" apply false
+	kotlin("plugin.jpa") version "2.2.21" apply false
+	id("org.springframework.boot") version "4.0.6" apply false
+	id("io.spring.dependency-management") version "1.1.7" apply false
 }
 
-group = "com.github.kszuba1"
-version = "0.0.1-SNAPSHOT"
+allprojects {
+	group = "com.github.kszuba1"
+	version = "0.0.1-SNAPSHOT"
 
-java {
-	toolchain {
-		languageVersion = JavaLanguageVersion.of(21)
+	repositories {
+		mavenCentral()
 	}
-}
-
-repositories {
-	mavenCentral()
-}
-
-dependencies {
-	implementation("org.springframework.boot:spring-boot-starter-data-jpa")
-	implementation("org.springframework.boot:spring-boot-starter-webmvc")
-	implementation("org.jetbrains.kotlin:kotlin-reflect")
-	implementation("tools.jackson.module:jackson-module-kotlin")
-	runtimeOnly("com.h2database:h2")
-	runtimeOnly("org.springframework.boot:spring-boot-h2console")
-	testImplementation("org.springframework.boot:spring-boot-starter-data-jpa-test")
-	testImplementation("org.springframework.boot:spring-boot-starter-webmvc-test")
-	testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
-	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
-}
-
-kotlin {
-	compilerOptions {
-		freeCompilerArgs.addAll("-Xjsr305=strict", "-Xannotation-default-target=param-property")
-	}
-}
-
-allOpen {
-	annotation("jakarta.persistence.Entity")
-	annotation("jakarta.persistence.MappedSuperclass")
-	annotation("jakarta.persistence.Embeddable")
-}
-
-tasks.withType<Test> {
-	useJUnitPlatform()
 }
